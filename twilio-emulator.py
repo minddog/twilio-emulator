@@ -6,7 +6,6 @@ import urlparse
 import readline
 from xml.dom.minidom import parseString
 
-
 def getResponse(url, method, digits):
     data = None
 
@@ -22,7 +21,6 @@ def getResponse(url, method, digits):
     return fd.read()
 
 def Gather(node):
-    print "Gathering"
     # See Verb Attributes
     # Source: http://www.twilio.com/docs/api_reference/TwiML/gather
     numDigits = -1
@@ -48,7 +46,7 @@ def Gather(node):
     if node.hasChildNodes():
         [processNode(child) for child in node.childNodes]
             
-    digits = input("Enter Something [%s]" % numDigits)
+    digits = input("Digits Required %s> " % numDigits)
     request = { 
         'action' : action, 
         'method' : method,
@@ -58,7 +56,6 @@ def Gather(node):
     return request
 
 def Say(node):
-    print "Saying Text"
     if not node.hasChildNodes():
         print "text node for <Say> not found."
         sys.exit(1)
@@ -67,12 +64,11 @@ def Say(node):
         print "Multiple child nodes for say illegal"
         sys.exit(1)
 
-    print node.childNodes[0].data
+    print "[Say] %s" % node.childNodes[0].data
 
     return None
 
 def Play(node):
-    print "Playing Sound"
     if not node.hasChildNodes():
         print "text node for <Play> not found."
         sys.exit(1)
@@ -81,25 +77,41 @@ def Play(node):
         print "Multiple child nodes for play illegal"
         sys.exit(1)
     
-    print node.childNodes[0].data
+    print "[Play] %s" % node.childNodes[0].data
 
     return None
 
 def Pause(node):
-    print "Pausing"
+    length = 1
+    if node.attributes.hasKey('length'):
+        length = nodes.attributes['length'].value
+    
+    print "[Pause length=%s]" % length
+    return None
 
 def Dial(node):
-    print "Dialing ",
     if not node.hasChildNodes():
         print "text node for <Play> not found."
         sys.exit(1)
 
-    if len(node.childNodes) != 1:
-        print "Multiple child nodes for play illegal"
+    if len(node.childNodes) == 1 and \
+            node.childNodes[0].nodeType == node.TEXT_NODE:
+        print "[Dial] %s" % node.childNodes[0].data
+
+    if node.hasChildNodes():
+        print "[Dial with children]"
+        [processNode(child) for child in node.childNodes]
+
+    return None
+
+def Number(node):
+    if not node.hasChildNodes():
+        print "text node for <Number> not found."
         sys.exit(1)
-    
-    print node.childNodes[0].data
-    
+
+    print "[Number] %s" % node.childNodes[0].data
+
+    return None
 
 def Redirect(node):
     print "Redirecting"
@@ -162,4 +174,7 @@ def emulate(url, method = 'GET', digits = None):
 
     print '[Phone call ended]'
 
-emulate('http://search.earth911.com/voice/')
+if len(sys.argv) > 1:
+    emulate(sys.argv[1])
+else:
+    print "twilio-emulator.py [url]"
