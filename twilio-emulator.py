@@ -6,15 +6,18 @@ import urlparse
 import readline
 from threading import Timer
 from xml.dom.minidom import parseString
+from xml.parsers.expat import ExpatError
 
 class TwiMLSyntaxError(Exception):
-    def __init__(self, line, col):
-        self.line = line
+    def __init__(self, lineno, col, doc):
+        self.lineno = lineno
         self.col = col
+        self.doc = doc
+        self.line = self.doc.split("\n")[self.lineno-2]
         
     def __str__(self):
-        return "TwiMLSyntaxError at %i:%i" \
-            % (line, col)
+        return "TwiMLSyntaxError at line %i col %i near %s" \
+            % (self.lineno, self.col, self.line)
 
 def getResponse(url, method, digits):
     data = None
@@ -239,7 +242,14 @@ def emulate(url, method = 'GET', digits = None):
         print '[Emulation Failed to start]'
         sys.exit(1)
     
-    rdoc = parseString(response)
+    try:
+        rdoc = parseString(response)
+    except ExpatError, e:
+        raise TwiMLSyntaxError(e.lineno, e.offset, response)
+
+    # finally:
+        # exit_handler()
+
     try:
         respNode = rdoc.getElementsByTagName('Response')[0]
     except IndexError, e:
@@ -260,10 +270,13 @@ def emulate(url, method = 'GET', digits = None):
             request = processNode(node)
             if not request:
                 continue
-            emulate(request['action'], 
-                    request['method'], 
-                    request['digits'])
-
+            try:
+                emulate(request['action'], 
+                        request['method'], 
+                        request['digits'])
+            except TwiMLSyntaxError, e:
+                print e
+                exit_handler()
 
 def main():
     signal.signal(signal.SIGALRM, input_timeout)
@@ -271,7 +284,11 @@ def main():
 
     
     if len(sys.argv) > 1:
-        emulate(sys.argv[1])
+        try:
+            emulate(sys.argv[1])
+        except TwiMLSyntaxError, e:
+            print e
+            exit_handler()
         print '[Phone call ended]'
         
     else:
