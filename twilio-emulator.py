@@ -72,7 +72,7 @@ def Gather(node):
     numDigits = -1
     timeout = 5
     method = "POST"
-    action = "#"
+    action = ""
     finishOnKey = "#"
     if node.attributes.has_key('numDigits'):
         numDigits = node.attributes['numDigits'].value
@@ -271,6 +271,8 @@ def emulate(url, method = 'GET', digits = None):
             if not request:
                 continue
             try:
+                if(request['action'] == ''):
+                    request['action'] = url
                 emulate(request['action'], 
                         request['method'], 
                         request['digits'])
