@@ -36,6 +36,10 @@ def getResponse(url, method, digits):
 
     return fd.read()
 
+def end_pause():
+    print "[End Pause]"
+    return None
+
 def input_timeout(*args):
     print "[Gather timed out]"
 
@@ -127,10 +131,13 @@ def Play(node):
 
 def Pause(node):
     length = 1
-    if node.attributes.hasKey('length'):
-        length = nodes.attributes['length'].value
+    if node.hasAttributes() and \
+            node.attributes.has_key('length'):
+        length = node.attributes['length'].value
     
     print "[Pause length=%s]" % length
+    t = Timer(float(length), end_pause)
+    t.start()
     return None
 
 def Dial(node):
