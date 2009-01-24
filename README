@@ -1,0 +1,7 @@
+Twilio Emulator
+Copyright(c) 2009 Adam Ballai <aballai@gmail.com>
+----------------------------------------------------
+A python based twilio call flow emulator that allows 
+user interaction for dialogs and timeouts.  It is 
+designed to speed up development of your application 
+without dialing a phone and saving telephony costs.
