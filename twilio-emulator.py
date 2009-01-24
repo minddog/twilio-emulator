@@ -97,10 +97,10 @@ def Dial(node):
     if len(node.childNodes) == 1 and \
             node.childNodes[0].nodeType == node.TEXT_NODE:
         print "[Dial] %s" % node.childNodes[0].data
+        return None
 
-    if node.hasChildNodes():
-        print "[Dial with children]"
-        [processNode(child) for child in node.childNodes]
+    print "[Dial with children]"
+    [processNode(child) for child in node.childNodes]
 
     return None
 
@@ -129,7 +129,6 @@ def Redirect(node):
 
 def processNode(node):
     action = node.nodeName.encode('ascii')
-    print "processing node: %s" % action
     if node.nodeType == node.TEXT_NODE:
         print node.data
     else:
@@ -172,9 +171,10 @@ def emulate(url, method = 'GET', digits = None):
                     request['method'], 
                     request['digits'])
 
-    print '[Phone call ended]'
 
 if len(sys.argv) > 1:
     emulate(sys.argv[1])
+    print '[Phone call ended]'
+
 else:
     print "twilio-emulator.py [url]"
