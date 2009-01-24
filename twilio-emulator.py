@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, signal
+import sys, signal, os
 import urllib2
 import urlparse
 import readline
@@ -44,18 +44,20 @@ def input_timeout(*args):
     print "[Gather timed out]"
 
 def exit_handler(*args):
+    sys.stdout.flush()
     sys.exit(0)
 
+
 def timed_input(prompt, timeout):
-    signal.signal(signal.SIGALRM, input_timeout)
-    signal.signal(signal.SIGINT, exit_handler)
     signal.alarm(timeout)
     sys.stdout.write(prompt)
     sys.stdout.flush()
 
     try:
         input = sys.stdin.readline()
-    except:
+    except KeyboardInterrupt, e:
+        exit_handler()
+    except IOError, e:
         input = None
 
     signal.alarm(0)
@@ -179,6 +181,41 @@ def Redirect(node):
 
     return request
 
+def Record(node):
+    action = ""
+    method = "POST"
+    timeout = 5
+    finishOnKey = "123456789*#"
+    maxLength = 3600
+
+    if node.attributes.has_key('action'):
+        action = node.attributes['action'].value
+
+    if node.attributes.has_key('method'):
+        method = node.attributes['method'].value
+
+    if node.attributes.has_key('timeout'):
+        timeout = node.attributes['timeout'].value
+
+    if node.attributes.has_key('finishOnKey'):
+        finishOnKey = node.attributes['finishOnKey'].value
+
+    if node.attributes.has_key('maxLength'):
+        maxLength = node.attributes['maxLength'].value
+
+    prompt = "[Record maxLength=%s timeout=%s action=%s]" % \
+        (maxLength, timeout, action)
+
+    digits = timed_input(prompt, int(timeout))
+
+    request = {
+        'action' : action,
+        'method' : method,
+        'digits' : digits,
+        }
+
+    return request
+
 def Hangup(node):
     print "[Hangup]"
     sys.exit(0)
@@ -228,9 +265,18 @@ def emulate(url, method = 'GET', digits = None):
                     request['digits'])
 
 
-if len(sys.argv) > 1:
-    emulate(sys.argv[1])
-    print '[Phone call ended]'
+def main():
+    signal.signal(signal.SIGALRM, input_timeout)
+    signal.signal(signal.SIGINT, exit_handler)
 
-else:
-    print "twilio-emulator.py [url]"
+    
+    if len(sys.argv) > 1:
+        emulate(sys.argv[1])
+        print '[Phone call ended]'
+        
+    else:
+        print "twilio-emulator.py [url]"
+
+
+if __name__ == "__main__":
+    main()
