@@ -1,10 +1,20 @@
 #!/usr/bin/python
 
-import sys
+import sys, signal
 import urllib2
 import urlparse
 import readline
+from threading import Timer
 from xml.dom.minidom import parseString
+
+class TwiMLSyntaxError(Exception):
+    def __init__(self, line, col):
+        self.line = line
+        self.col = col
+        
+    def __str__(self):
+        return "TwiMLSyntaxError at %i:%i" \
+            % (line, col)
 
 def getResponse(url, method, digits):
     data = None
@@ -13,12 +23,39 @@ def getResponse(url, method, digits):
         data = "Digits=%s" % digits
     elif method == 'GET' and digits:
         purl = urlparse.urlparse(url)
-        url = "%s?%s&Digits=%s" % ( purl.geturl(), purl.query , digits)
+        url = "%s?%s&Digits=%s" % \
+            ( purl.geturl(), purl.query , digits)
         
     print '[%s] %s \n%s' % (method, url, data)
-    req = urllib2.Request(url, data)
-    fd = urllib2.urlopen(req)
+    try:
+        req = urllib2.Request(url, data)
+        fd = urllib2.urlopen(req)
+    except IOError, e:
+        print '[Not Found]', e
+        sys.exit(1)
+
     return fd.read()
+
+def input_timeout(*args):
+    print "[Gather timed out]"
+
+def exit_handler(*args):
+    sys.exit(0)
+
+def timed_input(prompt, timeout):
+    signal.signal(signal.SIGALRM, input_timeout)
+    signal.signal(signal.SIGINT, exit_handler)
+    signal.alarm(timeout)
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+
+    try:
+        input = sys.stdin.readline()
+    except:
+        input = None
+
+    signal.alarm(0)
+    return input
 
 def Gather(node):
     # See Verb Attributes
@@ -26,7 +63,7 @@ def Gather(node):
     numDigits = -1
     timeout = 5
     method = "POST"
-    action = ""
+    action = "#"
     finishOnKey = "#"
     if node.attributes.has_key('numDigits'):
         numDigits = node.attributes['numDigits'].value
@@ -45,8 +82,15 @@ def Gather(node):
 
     if node.hasChildNodes():
         [processNode(child) for child in node.childNodes]
-            
-    digits = input("Digits Required %s> " % numDigits)
+           
+    prompt = "[Gather timeout=%s numDigits=%s]> " % \
+                       (timeout,
+                        numDigits)
+                        
+    digits = timed_input(prompt, int(timeout))
+    if not digits:
+        return None
+
     request = { 
         'action' : action, 
         'method' : method,
@@ -114,10 +158,11 @@ def Number(node):
     return None
 
 def Redirect(node):
-    print "Redirecting"
     if len(node.childNodes) != 1:
         print "Redirect Syntax Error"
         sys.exit(1)
+
+    print "[Redirect] ", node.childNodes[0].data
 
     request = { 
         'action' : node.childNodes[0].data, 
@@ -126,6 +171,10 @@ def Redirect(node):
         }
 
     return request
+
+def Hangup(node):
+    print "[Hangup]"
+    sys.exit(0)
 
 def processNode(node):
     action = node.nodeName.encode('ascii')
