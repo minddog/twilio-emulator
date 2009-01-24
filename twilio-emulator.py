@@ -64,7 +64,7 @@ def Say(node):
         print "Multiple child nodes for say illegal"
         sys.exit(1)
 
-    print "[Say] %s" % node.childNodes[0].data
+    print "[Say] %s" % node.childNodes[0].data.strip()
 
     return None
 
@@ -96,7 +96,7 @@ def Dial(node):
 
     if len(node.childNodes) == 1 and \
             node.childNodes[0].nodeType == node.TEXT_NODE:
-        print "[Dial] %s" % node.childNodes[0].data
+        print "[Dial] %s" % node.childNodes[0].data.strip()
         return None
 
     print "[Dial with children]"
@@ -109,7 +109,7 @@ def Number(node):
         print "text node for <Number> not found."
         sys.exit(1)
 
-    print "[Number] %s" % node.childNodes[0].data
+    print "[Number] %s" % node.childNodes[0].data.encode('ascii').strip()
 
     return None
 
@@ -130,7 +130,7 @@ def Redirect(node):
 def processNode(node):
     action = node.nodeName.encode('ascii')
     if node.nodeType == node.TEXT_NODE:
-        print node.data
+        print node.data.strip()
     else:
         return eval("%s(node)" % action)
 
