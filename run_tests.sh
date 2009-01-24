@@ -2,7 +2,7 @@
 TWILIO_SRC="/home/minddog/twilio-emulator/"
 TWML_EMU="$TWILIO_SRC/twilio-emulator.py"
 
-TESTS="multi_number.xml gather.xml pause.xml"
+TESTS="multi_number.xml gather.xml pause.xml broken_pause.xml"
 
 echo "Running tests..."
 

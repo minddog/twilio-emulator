@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>  
+<!-- page located at http://example.com/simple_gather.xml -->  
+<Response>  
+    <Say>
+        This is a broke test
+    </Say>
+    <Say>
+        This is a broke test
+    </Say>
+    <Pause length="5 />
+    <Say>
+        This is a broke test
+    </Say>
+    <Say>
+        This is a broke test
+    </Say>
+</Response>
