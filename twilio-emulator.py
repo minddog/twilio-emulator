@@ -84,7 +84,7 @@ def getResponse(url, method, digits):
         req = urllib2.Request(url, data)
         fd = urllib2.urlopen(req)
     except IOError, e:
-        print '[Not Found]', e
+        logger.error('[Not Found] %s' % e)
         exit_handler()
 
     return fd.read()
